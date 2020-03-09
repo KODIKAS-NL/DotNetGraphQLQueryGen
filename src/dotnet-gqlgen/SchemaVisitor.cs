@@ -19,6 +19,21 @@ namespace dotnet_gqlgen
             this.schemaInfo = new SchemaInfo(typeMappings);
         }
 
+        private static string[] reservedWords = new string[]{
+            "abstract","as","base","bool","break","byte","case","catch",
+            "char","checked","class","const","continue","decimal","default",
+            "delegate","do","double","else","enum","event","explicit",
+            "extern","false","finally","fixed","float","for","foreach",
+            "goto","if","implicit","in","int","interface","internal",
+            "is","lock","long","namespace","new","null","object","operator",
+            "out","override","params","private","protected","public",
+            "readonly","ref","return","sbyte","sealed","short","sizeof",
+            "stackalloc","static","string","struct","switch","this","throw",
+            "true","try","typeof","uint","ulong","unchecked","unsafe",
+            "ushort","using","using static","virtual","void","volatile","while"
+        };
+        private string EscapeReserved(string name) => reservedWords.Contains(name) ? $"@{name}" : name;
+
         public override object VisitFieldDef(GraphQLSchemaParser.FieldDefContext context)
         {
             var result = base.VisitFieldDef(context);
@@ -31,7 +46,7 @@ namespace dotnet_gqlgen
             type = type.Trim('[', ']');
             addFieldsTo.Add(new Field(this.schemaInfo)
             {
-                Name = name,
+                Name = EscapeReserved(name),
                 TypeName = type,
                 IsArray = isArray,
                 Args = args,
@@ -55,7 +70,7 @@ namespace dotnet_gqlgen
                     args.Add(new Arg(this.schemaInfo)
                     {
                         UnknownTypesAsString = this.UnknownTypesAsString,
-                        Name = arg.NAME().GetText(),
+                        Name = EscapeReserved(arg.NAME().GetText()),
                         TypeName = type,
                         Required = arg.required != null,
                         IsArray = isArray
