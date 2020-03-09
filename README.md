@@ -134,7 +134,13 @@ public interface Mutation
 }
 ```
 
-It also generates a `GraphQLClient` class that will work for an unauthenticated API. You can modify that class to implement the authentication you may need. `GraphQLClient` exposes 2 methods, `async Task<GqlResult<TQuery>> QueryAsync<TQuery>(Expression<Func<RootQuery, TQuery>> query)` for queries and `async Task<GqlResult<TQuery>> MutateAsync<TQuery>(Expression<Func<Mutation, TQuery>> query)` for mutations.
+It also generates a `GraphQLClient` class that will work for an unauthenticated API, but it is also possible to use authentication in the following way:
+```c#
+var httpClient = new HttpClient();
+httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "###tokenstring###");
+var graphQLClient = new GraphQLClient(new Uri("https://api.url.com/"), httpClient);
+```
+`GraphQLClient` exposes 2 methods, `async Task<GqlResult<TQuery>> QueryAsync<TQuery>(Expression<Func<RootQuery, TQuery>> query)` for queries and `async Task<GqlResult<TQuery>> MutateAsync<TQuery>(Expression<Func<Mutation, TQuery>> query)` for mutations.
 
 Example usage
 
