@@ -34,6 +34,7 @@ namespace dotnet_gqlgen
                 IsArray = isArray,
                 Args = args,
                 Description = desc,
+                Required = context.required != null,
             });
             return result;
         }

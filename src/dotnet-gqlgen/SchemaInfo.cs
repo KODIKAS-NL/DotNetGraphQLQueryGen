@@ -9,14 +9,10 @@ namespace dotnet_gqlgen
         public Dictionary<string, string> typeMappings = new Dictionary<string, string> {
             {"String", "string"},
             {"ID", "string"},
-            {"Int", "int?"},
-            {"Float", "double?"},
-            {"Boolean", "bool?"},
-            {"String!", "string"},
-            {"ID!", "string"},
-            {"Int!", "int"},
-            {"Float!", "double"},
-            {"Boolean!", "bool"},
+            {"Int", "int"},
+            {"Float", "double"},
+            {"Boolean", "bool"},
+            {"Date", "DateTime"}
         };
 
         public SchemaInfo(Dictionary<string, string> typeMappings)
@@ -62,10 +58,14 @@ namespace dotnet_gqlgen
             return typeMappings.ContainsKey(typeName) || Types.ContainsKey(typeName) || Inputs.ContainsKey(typeName);
         }
 
-        internal string GetDotNetType(string typeName)
+        internal string GetDotNetType(string typeName, bool required = true)
         {
-            if (typeMappings.ContainsKey(typeName))
-                return typeMappings[typeName];
+            if (typeMappings.ContainsKey(typeName)){
+                var type = typeMappings[typeName];
+                if(required)
+                    return type;
+                return type + (new string[]{"int","bool","float","datetime","double","char"}.Contains(type, StringComparer.OrdinalIgnoreCase) ? "?" : "");
+            }
             if (Types.ContainsKey(typeName))
                 return Types[typeName].Name;
             return Inputs[typeName].Name;
@@ -73,7 +73,7 @@ namespace dotnet_gqlgen
     }
 
     public class TypeInfo
-    {
+    { 
         public TypeInfo(IEnumerable<Field> fields, string name, string description, bool isInput = false)
         {
             Fields = fields.ToList();
@@ -97,7 +97,7 @@ namespace dotnet_gqlgen
             Args = new List<Arg>();
             this.schemaInfo = schemaInfo;
         }
-
+        public bool Required { get; set; } = true;
         public string Name { get; set; }
         public string TypeName { get; set; }
         public bool IsArray { get; set; }
