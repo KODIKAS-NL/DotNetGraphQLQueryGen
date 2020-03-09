@@ -11,12 +11,12 @@ enumDef     : comment* 'enum' ws* typeName=NAME ws* '{' ws* enumItem+ comment* w
 
 objectDef   : '{' ws* fieldDef (ws* fieldDef)* ws* '}' ws*;
 
-fieldDef    : comment* name=NAME ('(' args=arguments ')')? ws* ':' ws* type=dataType;
+fieldDef    : comment* name=NAME ('(' args=arguments ws* ')')? ws* ':' ws* type=dataType required='!'?;
 enumItem    : comment* NAME;
 arguments   : ws* argument (ws* ','* ws* argument)*;
-argument    : NAME ws* ':' ws* dataType required='!'?;
+argument    : comment* ws* NAME ws* ':' ws* dataType required='!'?;
 
-dataType    : (NAME '!'? | '[' NAME '!'? ']');
+dataType    : (NAME | '[' NAME '!'? ']');
 NAME        : [a-z_A-Z] [a-z_A-Z0-9-]*;
 
 comment     : ws* (('"' ~('\n'|'\r')* '"') | ('"""' ~'"""'* '"""') | ('#' ~('\n'|'\r')*)) ws*;
