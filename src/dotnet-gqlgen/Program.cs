@@ -24,6 +24,9 @@ namespace dotnet_gqlgen
         [Option(LongName = "output", ShortName = "o", Description = "Output directory")]
         public string OutputDir { get; } = "output";
 
+        [Option(LongName = "unknown_as_string", ShortName = "u", Description = "Generate unknown .Net types as type string")]
+        public bool GenerateAsString { get; } = false;
+
         public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
         private async void OnExecute()
@@ -40,7 +43,7 @@ namespace dotnet_gqlgen
                 }
 
                 // parse into AST
-                var typeInfo = SchemaCompiler.Compile(schemaText, mappings);
+                var typeInfo = SchemaCompiler.Compile(schemaText, mappings, this.GenerateAsString);
 
                 Console.WriteLine($"Generating types in namespace {Namespace}, outputting to {ClientClassName}.cs");
 

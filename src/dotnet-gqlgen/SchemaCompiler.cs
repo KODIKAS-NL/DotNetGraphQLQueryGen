@@ -9,7 +9,7 @@ namespace dotnet_gqlgen
 {
     public static class SchemaCompiler
     {
-        public static SchemaInfo Compile(string schemaText, Dictionary<string, string> typeMappings = null)
+        public static SchemaInfo Compile(string schemaText, Dictionary<string, string> typeMappings = null, bool unknownTypesAsString = false)
         {
             try
             {
@@ -20,7 +20,7 @@ namespace dotnet_gqlgen
                 parser.BuildParseTree = true;
                 parser.ErrorHandler = new BailErrorStrategy();
                 var tree = parser.schema();
-                var visitor = new SchemaVisitor(typeMappings);
+                var visitor = new SchemaVisitor(typeMappings) { UnknownTypesAsString = unknownTypesAsString };
                 // visit each node. it will return a linq expression for each entity requested
                 visitor.Visit(tree);
 

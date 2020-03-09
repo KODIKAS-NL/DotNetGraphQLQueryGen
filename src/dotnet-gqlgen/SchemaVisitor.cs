@@ -12,6 +12,8 @@ namespace dotnet_gqlgen
 
         public SchemaInfo SchemaInfo => schemaInfo;
 
+        public bool UnknownTypesAsString { get; set; }
+
         public SchemaVisitor(Dictionary<string, string> typeMappings)
         {
             this.schemaInfo = new SchemaInfo(typeMappings);
@@ -35,6 +37,7 @@ namespace dotnet_gqlgen
                 Args = args,
                 Description = desc,
                 Required = context.required != null,
+                UnknownTypesAsString = this.UnknownTypesAsString
             });
             return result;
         }
@@ -51,6 +54,7 @@ namespace dotnet_gqlgen
                     type = type.Trim('[', ']');
                     args.Add(new Arg(this.schemaInfo)
                     {
+                        UnknownTypesAsString = this.UnknownTypesAsString,
                         Name = arg.NAME().GetText(),
                         TypeName = type,
                         Required = arg.required != null,
@@ -95,7 +99,7 @@ namespace dotnet_gqlgen
             using (new FieldConsumer(this, fields))
             {
                 var result = base.Visit(context.objectDef());
-                schemaInfo.Inputs.Add(context.typeName.Text, new TypeInfo(fields, context.typeName.Text, desc, isInput:true));
+                schemaInfo.Inputs.Add(context.typeName.Text, new TypeInfo(fields, context.typeName.Text, desc, isInput: true));
                 return result;
             }
         }

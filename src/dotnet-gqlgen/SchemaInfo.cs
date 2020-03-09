@@ -90,6 +90,8 @@ namespace dotnet_gqlgen
 
     public class Field
     {
+        public bool UnknownTypesAsString { get; set; }
+
         private readonly SchemaInfo schemaInfo;
 
         public Field(SchemaInfo schemaInfo)
@@ -118,6 +120,11 @@ namespace dotnet_gqlgen
             {
                 if (!schemaInfo.HasDotNetType(TypeName))
                 {
+                    if (UnknownTypesAsString)
+                    {
+                        Console.WriteLine($"Unknown type '{TypeName}' returning String");
+                        return "string";
+                    }
                     throw new SchemaException($"Unknown dotnet type for schema type '{TypeName}'. Please provide a mapping for any custom scalar types defined in the schema");
                 }
                 return schemaInfo.GetDotNetType(TypeName);
