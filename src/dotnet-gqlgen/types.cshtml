@@ -68,7 +68,6 @@ namespace @Model.Namespace
         @:/// </summary>
         @:[GqlFieldName("@field.Name")]
         @:@field.DotNetType @(field.DotNetName)();
-        }
 
         @:/// <summary>
         @if (!string.IsNullOrEmpty(field.Description))
@@ -79,7 +78,20 @@ namespace @Model.Namespace
         @:/// </summary>
         @:/// <param name="selection">Projection of fields to select from the object</param>
         @:[GqlFieldName("@field.Name")]
-        @(field.IsArray ? "        List<TReturn>" : "        TReturn") @:@field.DotNetName<TReturn>(@(field.ArgsOutput())@(field.Args.Count == 0 ? "" : ", ")Expression<Func<@field.DotNetTypeSingle, TReturn>> selection);
+        @(field.IsArray ? "        TReturn[]" : "        TReturn") @:@field.DotNetName<TReturn>(Expression<Func<@field.DotNetTypeSingle, TReturn>> selection);
+        }
+        @if(field.Args.Count > 0){
+        @:/// <summary>
+        @if (!string.IsNullOrEmpty(field.Description))
+        {
+        @:/// @field.Description
+        @:///
+        }
+        @:/// </summary>
+        @:/// <param name="selection">Projection of fields to select from the object</param>
+        @:[GqlFieldName("@field.Name")]
+        @(field.IsArray ? "        TReturn[]" : "        TReturn") @:@field.DotNetName<TReturn>(@(field.ArgsOutput()),Expression<Func<@field.DotNetTypeSingle, TReturn>> selection);
+        }
     }
 }
     @:}
