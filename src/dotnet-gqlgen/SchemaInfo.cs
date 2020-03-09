@@ -109,7 +109,7 @@ namespace dotnet_gqlgen
         {
             get
             {
-                return IsArray ? $"List<{DotNetTypeSingle}>" : DotNetTypeSingle;
+                return IsArray ? $"{DotNetTypeSingle}[]" : DotNetTypeSingle;
             }
         }
         public string DotNetTypeSingle
