@@ -64,11 +64,9 @@ namespace @Model.Namespace
             };
             var queryReq = new
             {
-                Query = gql.ToString()
+                query = gql.ToString()
             };
             req.Content = new StringContent(JsonConvert.SerializeObject(queryReq), Encoding.UTF8, "application/json");
-            // you will need to implement any auth
-            // req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var res = await client.SendAsync(req);
             var strResult = await res.Content.ReadAsStringAsync();
             var data = JsonConvert.DeserializeObject<GqlResult<TQuery>>(strResult);
