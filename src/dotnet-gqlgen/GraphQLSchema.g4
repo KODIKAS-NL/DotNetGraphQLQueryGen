@@ -7,12 +7,12 @@ schemaDef   : comment* 'schema' ws* objectDef;
 typeDef     : comment* 'type ' ws* typeName=NAME ws* objectDef;
 scalarDef   : comment* 'scalar' ws* typeName=NAME ws+;
 inputDef    : comment* 'input' ws* typeName=NAME ws* objectDef;
-enumDef     : comment* 'enum' ws* typeName=NAME ws* '{' ws* enumItem+ comment* ws* '}';
+enumDef     : comment* 'enum' ws* typeName=NAME ws* '{' ws* enumItem+ ws* '}';
 
 objectDef   : '{' ws* fieldDef (ws* fieldDef)* ws* '}' ws*;
 
 fieldDef    : comment* name=NAME ('(' args=arguments ws* ')')? ws* ':' ws* type=dataType required='!'?;
-enumItem    : comment* NAME;
+enumItem    : comment* NAME ws*;
 arguments   : ws* argument (ws* ','* ws* argument)*;
 argument    : comment* ws* NAME ws* ':' ws* dataType required='!'?;
 
