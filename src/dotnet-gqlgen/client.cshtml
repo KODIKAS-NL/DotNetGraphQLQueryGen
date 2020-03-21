@@ -32,13 +32,13 @@ namespace @Model.Namespace
     public class @Model.ClientClassName : BaseGraphQLClient
     {
         private Uri apiUrl;
-        private readonly HttpClient client;
+        public HttpClient Client { get; private set;}
 
         public @(Model.ClientClassName)()
         {
             this.apiUrl = new Uri("");
-            this.client = new HttpClient();
-            this.client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            this.Client = new HttpClient();
+            this.Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         public @(Model.ClientClassName)(HttpClient client)
@@ -49,8 +49,8 @@ namespace @Model.Namespace
         public @(Model.ClientClassName)(Uri apiUrl, HttpClient client)
         {
             this.apiUrl = apiUrl;
-            this.client = client;
-            this.client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            this.Client = client;
+            this.Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         private async Task<GqlResult<TQuery>> ProcessResult<TQuery>(string gql)
@@ -67,7 +67,7 @@ namespace @Model.Namespace
                 query = gql.ToString()
             };
             req.Content = new StringContent(JsonConvert.SerializeObject(queryReq), Encoding.UTF8, "application/json");
-            var res = await client.SendAsync(req);
+            var res = await Client.SendAsync(req);
             var strResult = await res.Content.ReadAsStringAsync();
             var data = JsonConvert.DeserializeObject<GqlResult<TQuery>>(strResult);
             return data;
