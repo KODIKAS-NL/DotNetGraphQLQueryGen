@@ -1,7 +1,7 @@
+@namespace dotnet_gqlgen
 @{
     DisableEncoding = true;
 }
-@using dotnet_gqlgen;
 
 using System;
 using System.Collections.Generic;
@@ -90,7 +90,7 @@ namespace @Model.Namespace
         @:/// </summary>
         @:/// <param name="selection">Projection of fields to select from the object</param>
         @:[GqlFieldName("@field.Name")]
-        @(field.IsArray ? "        TReturn[]" : "        TReturn") @:@field.DotNetName<TReturn>(@(field.ArgsOutput()),Expression<Func<@field.DotNetTypeSingle, TReturn>> selection);
+        @(field.IsArray ? "        TReturn[]" : "        TReturn") @:@field.DotNetName<TReturn>(@(field.ArgsOutput()), Expression<Func<@field.DotNetTypeSingle, TReturn>> selection);
         }
     }
 }

@@ -11,18 +11,18 @@ namespace dotnet_gqlgen
     {
         public static SchemaInfo Compile(string schemaText, Dictionary<string, string> typeMappings = null, bool unknownTypesAsString = false)
         {
+            var stream = new AntlrInputStream(schemaText);
+            var lexer = new GraphQLSchemaLexer(stream);
+            var tokens = new CommonTokenStream(lexer);
+            var parser = new GraphQLSchemaParser(tokens);
             try
             {
-                var stream = new AntlrInputStream(schemaText);
-                var lexer = new GraphQLSchemaLexer(stream);
-                var tokens = new CommonTokenStream(lexer);
-                var parser = new GraphQLSchemaParser(tokens);
                 parser.BuildParseTree = true;
                 parser.ErrorHandler = new BailErrorStrategy();
                 var tree = parser.schema();
                 var visitor = new SchemaVisitor(typeMappings) { UnknownTypesAsString = unknownTypesAsString };
                 // visit each node. it will return a linq expression for each entity requested
-                visitor.Visit(tree);
+                var visited = visitor.Visit(tree);
 
                 if (visitor.SchemaInfo.Schema == null || !visitor.SchemaInfo.Schema.Any(f => f.Name == "query"))
                 {
@@ -43,8 +43,8 @@ namespace dotnet_gqlgen
                     else if (pce.InnerException is InputMismatchException)
                     {
                         var ime = (InputMismatchException)pce.InnerException;
-                        var expecting = string.Join(", ", ime.GetExpectedTokens());
-                        throw new SchemaException($"Error: line {ime.OffendingToken.Line}:{ime.OffendingToken.Column} extraneous input '{ime.OffendingToken.Text}' expecting {expecting}");
+                        var expecting = ime.GetExpectedTokens().ToString(parser.Vocabulary);
+                        throw new SchemaException($@"Error: line {ime.OffendingToken.Line}:{ime.OffendingToken.Column} extraneous input '{ime.OffendingToken.Text}' expecting {expecting}");
                     }
                     throw new SchemaException(pce.InnerException.Message);
                 }

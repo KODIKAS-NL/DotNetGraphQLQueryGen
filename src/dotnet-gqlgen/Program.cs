@@ -55,7 +55,7 @@ namespace dotnet_gqlgen
 
                 var allTypes = typeInfo.Types.Concat(typeInfo.Inputs).ToDictionary(k => k.Key, v => v.Value);
 
-                string result = await engine.CompileRenderAsync("types.cshtml", new
+                string result = await engine.CompileRenderAsync("types.cshtml", new TypesModel
                 {
                     Namespace = Namespace,
                     SchemaFile = SchemaFile,

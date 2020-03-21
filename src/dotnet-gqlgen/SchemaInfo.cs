@@ -60,11 +60,12 @@ namespace dotnet_gqlgen
 
         internal string GetDotNetType(string typeName, bool required = true)
         {
-            if (typeMappings.ContainsKey(typeName)){
+            if (typeMappings.ContainsKey(typeName))
+            {
                 var type = typeMappings[typeName];
-                if(required)
+                if (required)
                     return type;
-                return type + (new string[]{"int","bool","float","datetime","double","char"}.Contains(type, StringComparer.OrdinalIgnoreCase) ? "?" : "");
+                return type + (new string[] { "int", "bool", "float", "datetime", "double", "char" }.Contains(type, StringComparer.OrdinalIgnoreCase) ? "?" : "");
             }
             if (Types.ContainsKey(typeName))
                 return Types[typeName].Name;
@@ -73,7 +74,7 @@ namespace dotnet_gqlgen
     }
 
     public class TypeInfo
-    { 
+    {
         public TypeInfo(IEnumerable<Field> fields, string name, string description, bool isInput = false)
         {
             Fields = fields.ToList();
@@ -105,7 +106,7 @@ namespace dotnet_gqlgen
         public bool IsArray { get; set; }
         public List<Arg> Args { get; set; }
         public string Description { get; set; }
-
+        public string Default { get; set; }
         public string DotNetName => Name[0].ToString().ToUpper() + string.Join("", Name.Skip(1));
         public string DotNetType
         {
@@ -143,12 +144,12 @@ namespace dotnet_gqlgen
         {
             if (!Args.Any())
                 return "";
-            return string.Join(", ", Args.Select(a => $"{a.DotNetType} {a.Name}"));
+            return string.Join(", ", Args.Select(a => $"{a.DotNetType} {a.Name}{(!String.IsNullOrWhiteSpace(a.Default) ? " = " + a.Default : "")}"));
         }
 
         public override string ToString()
         {
-            return $"{Name}:{(IsArray ? '[' + TypeName + ']': TypeName)}";
+            return $"{Name}:{(IsArray ? '[' + TypeName + ']' : TypeName)}";
         }
     }
 

@@ -52,7 +52,8 @@ namespace dotnet_gqlgen
                 Args = args,
                 Description = desc,
                 Required = context.required != null,
-                UnknownTypesAsString = this.UnknownTypesAsString
+                UnknownTypesAsString = this.UnknownTypesAsString,
+                //Default = context.value?.Text
             });
             return result;
         }
@@ -70,10 +71,11 @@ namespace dotnet_gqlgen
                     args.Add(new Arg(this.schemaInfo)
                     {
                         UnknownTypesAsString = this.UnknownTypesAsString,
-                        Name = EscapeReserved(arg.NAME().GetText()),
+                        Name = EscapeReserved(arg.NAME().FirstOrDefault()?.GetText()),
                         TypeName = type,
                         Required = arg.required != null,
-                        IsArray = isArray
+                        IsArray = isArray,
+                        //Default = arg.value?.Text
                     });
                 }
             }
@@ -105,6 +107,7 @@ namespace dotnet_gqlgen
             var result = base.VisitEnumDef(context);
             return result;
         }
+
         public override object VisitInputDef(GraphQLSchemaParser.InputDefContext context)
         {
             var docComment = context.comment().LastOrDefault();
