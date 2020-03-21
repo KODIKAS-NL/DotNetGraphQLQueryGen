@@ -6,7 +6,9 @@
     <RootNamespace>dotnet_gqlgen</RootNamespace>
     <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
-
+<ItemGroup>
+    <Compile Remove="output\**\*.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4" Version="4.6.6" />
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
