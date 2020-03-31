@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace DotNetGqlClient
 {
@@ -93,6 +94,7 @@ namespace DotNetGqlClient
                 {
                     var arg = call.Arguments.ElementAt(i);
                     var param = call.Method.GetParameters().ElementAt(i);
+                    var paramName = param.Name.Replace("@", "");
                     Type argType = null;
                     object argVal = null;
                     if (arg.NodeType == ExpressionType.Convert)
@@ -108,13 +110,27 @@ namespace DotNetGqlClient
                     }
                     else if (arg.NodeType == ExpressionType.MemberAccess)
                     {
-                        var ma = (MemberExpression)arg;
-                        var ce = (ConstantExpression)ma.Expression;
-                        argType = ma.Type;
-                        if (ma.Member.MemberType == MemberTypes.Field)
-                            argVal = ((FieldInfo)ma.Member).GetValue(ce.Value);
-                        else
-                            argVal = ((PropertyInfo)ma.Member).GetValue(ce.Value);
+                        ConstantExpression ce = null;
+                        var mex = new List<MemberExpression> { (MemberExpression)arg };
+                        while (ce == null)
+                        {
+                            var ma = mex.First();
+                            if ((ce = ma.Expression as ConstantExpression) == null)
+                                mex.Insert(0, (MemberExpression)ma.Expression);
+                        }
+                        argType = arg.Type;
+                        argVal = ce.Value;
+                        foreach (var ma in mex)
+                        {
+                            if (ma.Member.MemberType == MemberTypes.Field)
+                            {
+                                argVal = ((FieldInfo)ma.Member).GetValue(argVal);
+                            }
+                            else
+                            {
+                                argVal = ((PropertyInfo)ma.Member).GetValue(argVal);
+                            }
+                        }
                     }
                     else if (arg.NodeType == ExpressionType.New)
                     {
@@ -128,17 +144,28 @@ namespace DotNetGqlClient
                     }
                     if (argVal == null)
                         continue;
+
+
                     if (argType == typeof(string) || argType == typeof(Guid) || argType == typeof(Guid?))
                     {
-                        argVals.Add($"{param.Name}: \"{argVal}\"");
+                        argVals.Add($"{paramName}: \"{argVal}\"");
                     }
                     else if (argType == typeof(DateTime) || argType == typeof(DateTime?))
                     {
-                        argVals.Add($"{param.Name}: \"{((DateTime)argVal).ToString("o")}\"");
+                        argVals.Add($"{paramName}: \"{((DateTime)argVal).ToString("o")}\"");
+                    }
+                    else if (argType == typeof(bool))
+                    {
+                        argVals.Add($"{paramName}:{(((bool)argVal) ? "true" : "false")}");
+                    }
+                    else if (typeof(Array).IsAssignableFrom(argType))
+                    {
+                        var arrayVal = JsonConvert.SerializeObject((Array)argVal);
+                        argVals.Add($"{paramName}: {arrayVal}");
                     }
                     else
                     {
-                        argVals.Add($"{param.Name}: {argVal}");
+                        argVals.Add($"{paramName}: {argVal}");
                     }
                 };
                 if (argVals.Any())

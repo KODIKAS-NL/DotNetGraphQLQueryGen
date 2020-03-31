@@ -57,6 +57,7 @@ namespace dotnet_gqlgen
 
                 string result = await engine.CompileRenderAsync("types.cshtml", new TypesModel
                 {
+                    Enums = typeInfo.Enums,
                     Namespace = Namespace,
                     SchemaFile = SchemaFile,
                     Types = allTypes,

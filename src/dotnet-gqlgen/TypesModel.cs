@@ -10,5 +10,7 @@ namespace dotnet_gqlgen
         public Dictionary<string, TypeInfo> Types;
         public TypeInfo Mutation;
         public string CmdArgs;
+
+        public List<EnumItem> Enums;
     }
 }

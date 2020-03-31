@@ -6,6 +6,9 @@ namespace dotnet_gqlgen
 {
     public class SchemaInfo
     {
+        public bool UnknownTypesAsString { get; set; }
+
+        public static string[] Nullables = new string[] { "int", "bool", "float", "datetime", "double", "char" };
         public Dictionary<string, string> typeMappings = new Dictionary<string, string> {
             {"String", "string"},
             {"ID", "string"},
@@ -49,13 +52,14 @@ namespace dotnet_gqlgen
                 return null;
             }
         }
+        public List<EnumItem> Enums { get; } = new List<EnumItem>();
         public Dictionary<string, TypeInfo> Types { get; }
         public Dictionary<string, TypeInfo> Inputs { get; }
         public List<string> Scalars { get; }
 
         internal bool HasDotNetType(string typeName)
         {
-            return typeMappings.ContainsKey(typeName) || Types.ContainsKey(typeName) || Inputs.ContainsKey(typeName);
+            return typeMappings.ContainsKey(typeName) || Types.ContainsKey(typeName) || Inputs.ContainsKey(typeName) || Enums.Any(e=>e.Name == typeName);
         }
 
         internal string GetDotNetType(string typeName, bool required = true)
@@ -63,12 +67,12 @@ namespace dotnet_gqlgen
             if (typeMappings.ContainsKey(typeName))
             {
                 var type = typeMappings[typeName];
-                if (required)
-                    return type;
-                return type + (new string[] { "int", "bool", "float", "datetime", "double", "char" }.Contains(type, StringComparer.OrdinalIgnoreCase) ? "?" : "");
+                return type + (!required && Nullables.Contains(type, StringComparer.OrdinalIgnoreCase) ? "?" : "");
             }
             if (Types.ContainsKey(typeName))
                 return Types[typeName].Name;
+            if (Enums.Any(e=>e.Name == typeName))
+                return typeName + (required ? "" : "?");
             return Inputs[typeName].Name;
         }
     }
@@ -91,8 +95,6 @@ namespace dotnet_gqlgen
 
     public class Field
     {
-        public bool UnknownTypesAsString { get; set; }
-
         private readonly SchemaInfo schemaInfo;
 
         public Field(SchemaInfo schemaInfo)
@@ -112,24 +114,25 @@ namespace dotnet_gqlgen
         {
             get
             {
-                return IsArray ? $"{DotNetTypeSingle}[]" : DotNetTypeSingle;
+                return IsArray ? $"{dotNetTypeSingle(false)}[]" : DotNetTypeSingle;
             }
         }
         public string DotNetTypeSingle
         {
-            get
+            get => dotNetTypeSingle();
+        }
+
+        private string dotNetTypeSingle(bool checkRequired = true){
+            if (!schemaInfo.HasDotNetType(TypeName))
             {
-                if (!schemaInfo.HasDotNetType(TypeName))
+                if (schemaInfo.UnknownTypesAsString)
                 {
-                    if (UnknownTypesAsString)
-                    {
-                        Console.WriteLine($"Unknown type '{TypeName}' returning String");
-                        return "string";
-                    }
-                    throw new SchemaException($"Unknown dotnet type for schema type '{TypeName}'. Please provide a mapping for any custom scalar types defined in the schema");
+                    Console.WriteLine($"Unknown type '{TypeName}' returning String");
+                    return "string";
                 }
-                return schemaInfo.GetDotNetType(TypeName);
+                throw new SchemaException($"Unknown dotnet type for schema type '{TypeName}'. Please provide a mapping for any custom scalar types defined in the schema");
             }
+            return schemaInfo.GetDotNetType(TypeName, checkRequired ? Required : true);
         }
 
         public bool ShouldBeProperty
@@ -158,7 +161,25 @@ namespace dotnet_gqlgen
         public Arg(SchemaInfo schemaInfo) : base(schemaInfo)
         {
         }
+    }
 
-        public bool Required { get; set; }
+    public class EnumEntry
+    {
+        public EnumEntry(string name, string comment)
+        {
+            Name = name;
+            Comment = comment;
+        }
+        public string Name { get; }
+        public string Comment { get; }
+    }
+
+    public class EnumItem : EnumEntry
+    {
+        public EnumItem(string name, string comment, List<EnumEntry> entries) : base(name, comment)
+        {
+            this.Entries = entries;
+        }
+        public List<EnumEntry> Entries { get; }
     }
 }

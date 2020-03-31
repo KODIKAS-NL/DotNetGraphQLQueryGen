@@ -20,7 +20,7 @@ namespace dotnet_gqlgen
                 parser.BuildParseTree = true;
                 parser.ErrorHandler = new BailErrorStrategy();
                 var tree = parser.schema();
-                var visitor = new SchemaVisitor(typeMappings) { UnknownTypesAsString = unknownTypesAsString };
+                var visitor = new SchemaVisitor(typeMappings, unknownTypesAsString);
                 // visit each node. it will return a linq expression for each entity requested
                 var visited = visitor.Visit(tree);
 

@@ -12,11 +12,9 @@ namespace dotnet_gqlgen
 
         public SchemaInfo SchemaInfo => schemaInfo;
 
-        public bool UnknownTypesAsString { get; set; }
-
-        public SchemaVisitor(Dictionary<string, string> typeMappings)
+        public SchemaVisitor(Dictionary<string, string> typeMappings, bool unknownTypesAsString = false)
         {
-            this.schemaInfo = new SchemaInfo(typeMappings);
+            this.schemaInfo = new SchemaInfo(typeMappings) { UnknownTypesAsString = unknownTypesAsString };
         }
 
         private static string[] reservedWords = new string[]{
@@ -36,7 +34,6 @@ namespace dotnet_gqlgen
 
         public override object VisitFieldDef(GraphQLSchemaParser.FieldDefContext context)
         {
-            var result = base.VisitFieldDef(context);
             var docComment = context.comment().LastOrDefault();
             var desc = docComment != null ? (string)VisitComment(docComment) : null;
             var name = context.name.Text;
@@ -44,7 +41,7 @@ namespace dotnet_gqlgen
             var type = context.type.GetText();
             var isArray = type[0] == '[';
             type = type.Trim('[', ']');
-            addFieldsTo.Add(new Field(this.schemaInfo)
+            return new Field(this.schemaInfo)
             {
                 Name = EscapeReserved(name),
                 TypeName = type,
@@ -52,10 +49,9 @@ namespace dotnet_gqlgen
                 Args = args,
                 Description = desc,
                 Required = context.required != null,
-                UnknownTypesAsString = this.UnknownTypesAsString,
                 //Default = context.value?.Text
-            });
-            return result;
+            };
+
         }
 
         public override object VisitArguments(GraphQLSchemaParser.ArgumentsContext context)
@@ -70,7 +66,6 @@ namespace dotnet_gqlgen
                     type = type.Trim('[', ']');
                     args.Add(new Arg(this.schemaInfo)
                     {
-                        UnknownTypesAsString = this.UnknownTypesAsString,
                         Name = EscapeReserved(arg.NAME().FirstOrDefault()?.GetText()),
                         TypeName = type,
                         Required = arg.required != null,
@@ -94,45 +89,41 @@ namespace dotnet_gqlgen
 
         public override object VisitSchemaDef(GraphQLSchemaParser.SchemaDefContext context)
         {
-            using (new FieldConsumer(this, schemaInfo.Schema))
-            {
-                return base.VisitSchemaDef(context);
-            }
+            var fields = context.objectDef().fieldDef().Select(f => VisitFieldDef(f)).Cast<Field>().ToList();
+            schemaInfo.Schema.AddRange(fields);
+            return null;
         }
         public override object VisitEnumDef(GraphQLSchemaParser.EnumDefContext context)
         {
             var docComment = context.comment().LastOrDefault();
             var desc = docComment != null ? (string)VisitComment(docComment) : null;
+            var enumItems = context.enumItem().Select(i => VisitEnumItem(i)).Cast<string>().Select(e => new EnumEntry(e, "")).ToList();
+            this.schemaInfo.Enums.Add(new EnumItem(context.typeName.Text, desc, enumItems));
+            return null;
+        }
 
-            var result = base.VisitEnumDef(context);
-            return result;
+        public override object VisitEnumItem(GraphQLSchemaParser.EnumItemContext context)
+        {
+            var name = context.name.Text;
+            return EscapeReserved(name);
         }
 
         public override object VisitInputDef(GraphQLSchemaParser.InputDefContext context)
         {
             var docComment = context.comment().LastOrDefault();
             var desc = docComment != null ? (string)VisitComment(docComment) : null;
-
-            var fields = new List<Field>();
-            using (new FieldConsumer(this, fields))
-            {
-                var result = base.Visit(context.objectDef());
-                schemaInfo.Inputs.Add(context.typeName.Text, new TypeInfo(fields, context.typeName.Text, desc, isInput: true));
-                return result;
-            }
+            var fields = context.objectDef().fieldDef().Select(f => VisitFieldDef(f)).Cast<Field>().ToList();
+            schemaInfo.Inputs.Add(context.typeName.Text, new TypeInfo(fields, context.typeName.Text, desc, isInput: true));
+            return null;
         }
         public override object VisitTypeDef(GraphQLSchemaParser.TypeDefContext context)
         {
             var docComment = context.comment().LastOrDefault();
             var desc = docComment != null ? (string)VisitComment(docComment) : null;
 
-            var fields = new List<Field>();
-            using (new FieldConsumer(this, fields))
-            {
-                var result = base.Visit(context.objectDef());
-                schemaInfo.Types.Add(context.typeName.Text, new TypeInfo(fields, context.typeName.Text, desc));
-                return result;
-            }
+            var fields = context.objectDef().fieldDef().Select(f => VisitFieldDef(f)).Cast<Field>().ToList();
+            schemaInfo.Types.Add(context.typeName.Text, new TypeInfo(fields, context.typeName.Text, desc));
+            return null;
         }
         public override object VisitScalarDef(GraphQLSchemaParser.ScalarDefContext context)
         {

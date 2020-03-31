@@ -18,7 +18,7 @@ argument    : comment* ws* NAME ws* ':' ws* dataType required='!'?  (ws* '=' ws*
 
 dataType    : (NAME | '[' NAME '!'? ']');
 NAME        : [a-z_A-Z] [a-z_A-Z0-9-]*;
-INT: NEGATIVE_SIGN? '0' | NEGATIVE_SIGN? NONZERO_DIGIT DIGIT*;
+INT         : NEGATIVE_SIGN? '0' | NEGATIVE_SIGN? NONZERO_DIGIT DIGIT*;
 
 comment     : ws* (('"' ~('\n'|'\r')* '"') | ('"""' ~'"""'* '"""') | ('#' ~('\n'|'\r')*)) ws*;
 

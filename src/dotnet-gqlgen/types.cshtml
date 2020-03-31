@@ -16,7 +16,16 @@ using DotNetGqlClient;
 
 namespace @Model.Namespace
 {
-
+@foreach(var e in Model.Enums)
+{
+    @:public enum @e.Name 
+    @:{
+        @foreach (var ee in e.Entries)
+        {
+        @: @ee.Name,
+        }
+    @:}
+}
 @foreach(var gqlType in Model.Types.Values)
 {
     if (!string.IsNullOrEmpty(gqlType.Description))
@@ -34,6 +43,7 @@ namespace @Model.Namespace
     @:public interface @gqlType.Name
     }
     @:{
+
 @foreach(var field in gqlType.Fields)
 {
     @if (field.ShouldBeProperty || gqlType.IsInput)
