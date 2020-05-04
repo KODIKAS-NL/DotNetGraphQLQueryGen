@@ -10,7 +10,7 @@ namespace DotNetGqlClient
 {
     public abstract class BaseGraphQLClient
     {
-        protected string MakeQuery<TSchema, TQuery>(Expression<Func<TSchema, TQuery>> query, bool mutation = false)
+        protected virtual string MakeQuery<TSchema, TQuery>(Expression<Func<TSchema, TQuery>> query, bool mutation = false)
         {
             var gql = new StringBuilder();
             gql.AppendLine($"{(mutation ? "mutation" : "query")} BaseGraphQLClient {{");

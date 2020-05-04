@@ -31,4 +31,10 @@
     </Antlr4>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DotNetGqlClientBase\DotNetGqlClientBase.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FieldConsumer.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+  </ItemGroup>
 </Project>
