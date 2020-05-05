@@ -75,13 +75,13 @@ namespace @Model.Namespace
 
         public async Task<GqlResult<TQuery>> QueryAsync<TQuery>(Expression<Func<@Model.Query.Name, TQuery>> query)
         {
-            var gql = base.MakeQuery<@Model.Query.Name, TQuery>(query);
+            var gql = MakeQuery<@Model.Query.Name, TQuery>(query);
             return await ProcessResult<TQuery>(gql);
         }
 
         public async Task<GqlResult<TQuery>> MutateAsync<TQuery>(Expression<Func<@Model.Mutation.Name, TQuery>> query)
         {
-            var gql = base.MakeQuery<@Model.Mutation.Name, TQuery>(query, true);
+            var gql = MakeQuery<@Model.Mutation.Name, TQuery>(query, true);
             return await ProcessResult<TQuery>(gql);
         }
     }
