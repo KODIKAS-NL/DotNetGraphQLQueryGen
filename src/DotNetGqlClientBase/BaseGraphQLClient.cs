@@ -22,13 +22,13 @@ namespace DotNetGqlClient
             if (lambda.Body.NodeType != ExpressionType.New && lambda.Body.NodeType != ExpressionType.MemberInit)
                 throw new ArgumentException($"LambdaExpression must return a NewExpression or MemberInitExpression");
 
-            GetObjectSelection(gql, lambda.Body);
+            GetObjectSelection(gql, lambda.Body, 1);
 
-            gql.Append(@"}");
+            gql.AppendLine(@"}");
             return gql.ToString();
         }
 
-        private static void GetObjectSelection(StringBuilder gql, Expression exp)
+        private static void GetObjectSelection(StringBuilder gql, Expression exp, int depth)
         {
             if (exp.NodeType == ExpressionType.New)
             {
@@ -37,7 +37,7 @@ namespace DotNetGqlClient
                 {
                     var fieldVal = newExp.Arguments[i];
                     var fieldProp = newExp.Members[i];
-                    gql.AppendLine($"{fieldProp.Name}: {GetFieldSelection(fieldVal)}");
+                    gql.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{fieldProp.Name}: {GetFieldSelection(fieldVal,++depth)}");
                 }
             }
             else
@@ -47,12 +47,12 @@ namespace DotNetGqlClient
                 {
                     var valExp = ((MemberAssignment)mi.Bindings[i]).Expression;
                     var fieldVal = mi.Bindings[i].Member;
-                    gql.AppendLine($"{mi.Bindings[i].Member.Name}: {GetFieldSelection(valExp)}");
+                    gql.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{mi.Bindings[i].Member.Name}: {GetFieldSelection(valExp,++depth)}");
                 }
             }
         }
 
-        private static string GetFieldSelection(Expression field)
+        private static string GetFieldSelection(Expression field, int depth)
         {
             if (field.NodeType == ExpressionType.MemberAccess)
             {
@@ -65,11 +65,11 @@ namespace DotNetGqlClient
             else if (field.NodeType == ExpressionType.Call)
             {
                 var call = (MethodCallExpression)field;
-                return GetSelectionFromMethod(call);
+                return GetSelectionFromMethod(call,depth);
             }
             else if (field.NodeType == ExpressionType.Quote)
             {
-                return GetFieldSelection(((UnaryExpression)field).Operand);
+                return GetFieldSelection(((UnaryExpression)field).Operand,depth);
             }
             else
             {
@@ -77,7 +77,7 @@ namespace DotNetGqlClient
             }
         }
 
-        private static string GetSelectionFromMethod(MethodCallExpression call)
+        private static string GetSelectionFromMethod(MethodCallExpression call, int depth)
         {
             var select = new StringBuilder();
 
@@ -176,11 +176,11 @@ namespace DotNetGqlClient
             {
                 if (call.Method.ReturnType.GetInterfaces().Select(i => i.GetTypeInfo().GetGenericTypeDefinition()).Contains(typeof(IEnumerable<>)))
                 {
-                    select.Append(GetDefaultSelection(call.Method.ReturnType.GetGenericArguments().First()));
+                    select.Append(GetDefaultSelection(call.Method.ReturnType.GetGenericArguments().First(),depth));
                 }
                 else
                 {
-                    select.Append(GetDefaultSelection(call.Method.ReturnType));
+                    select.Append(GetDefaultSelection(call.Method.ReturnType,depth));
                 }
             }
             else
@@ -190,13 +190,13 @@ namespace DotNetGqlClient
                     exp = ((UnaryExpression)exp).Operand;
                 if (exp.NodeType == ExpressionType.Lambda)
                     exp = ((LambdaExpression)exp).Body;
-                GetObjectSelection(select, exp);
+                GetObjectSelection(select, exp, ++depth);
             }
-            select.Append("}");
+            select.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}}}");
             return select.ToString();
         }
 
-        private static string GetDefaultSelection(Type returnType)
+        private static string GetDefaultSelection(Type returnType, int depth)
         {
             var select = new StringBuilder();
             foreach (var field in returnType.GetProperties())
@@ -206,7 +206,7 @@ namespace DotNetGqlClient
                 if (attribute != null)
                     name = attribute.Name;
 
-                select.AppendLine($"{field.Name}: {name}");
+                select.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{field.Name}: {name}");
             }
             return select.ToString();
         }
