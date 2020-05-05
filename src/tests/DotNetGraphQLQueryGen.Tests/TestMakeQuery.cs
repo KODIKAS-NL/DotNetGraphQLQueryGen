@@ -49,7 +49,15 @@ Id: id
             var query = client.MakeQuery(q => new {
                 Actors = q.Actors(s => new {
                     s.Id,
+                    Name = s.Name,
+                    s.LastName,
                     DirectorOf = s.DirectorOf(),
+                    ActorIn = s.ActorIn(m => new
+                    {
+                        m.Name,
+                        m.Id,
+                        m.Rating
+                    })
                 }),
             });
             Assert.Equal($@"query BaseGraphQLClient {{
@@ -94,6 +102,9 @@ Id: id
                 Movie = q.AddMovie("movie", 5.5, null, null, new DateTime(2019, 10, 30, 17, 55, 23), s => new
                 {
                     s.Id,
+                    s.Name,
+                    Directors = s.Director(),
+                    s.DirectorId
                 }),
             }, true);
             Assert.Equal($@"mutation BaseGraphQLClient {{

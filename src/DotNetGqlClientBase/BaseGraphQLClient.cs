@@ -37,7 +37,7 @@ namespace DotNetGqlClient
                 {
                     var fieldVal = newExp.Arguments[i];
                     var fieldProp = newExp.Members[i];
-                    gql.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{fieldProp.Name}: {GetFieldSelection(fieldVal,++depth)}");
+                    gql.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{fieldProp.Name}: {GetFieldSelection(fieldVal,depth)}");
                 }
             }
             else
@@ -47,7 +47,7 @@ namespace DotNetGqlClient
                 {
                     var valExp = ((MemberAssignment)mi.Bindings[i]).Expression;
                     var fieldVal = mi.Bindings[i].Member;
-                    gql.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{mi.Bindings[i].Member.Name}: {GetFieldSelection(valExp,++depth)}");
+                    gql.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}{mi.Bindings[i].Member.Name}: {GetFieldSelection(valExp,depth)}");
                 }
             }
         }
@@ -176,11 +176,11 @@ namespace DotNetGqlClient
             {
                 if (call.Method.ReturnType.GetInterfaces().Select(i => i.GetTypeInfo().GetGenericTypeDefinition()).Contains(typeof(IEnumerable<>)))
                 {
-                    select.Append(GetDefaultSelection(call.Method.ReturnType.GetGenericArguments().First(),depth));
+                    select.Append(GetDefaultSelection(call.Method.ReturnType.GetGenericArguments().First(),depth+1));
                 }
                 else
                 {
-                    select.Append(GetDefaultSelection(call.Method.ReturnType,depth));
+                    select.Append(GetDefaultSelection(call.Method.ReturnType,depth+1));
                 }
             }
             else
@@ -190,9 +190,10 @@ namespace DotNetGqlClient
                     exp = ((UnaryExpression)exp).Operand;
                 if (exp.NodeType == ExpressionType.Lambda)
                     exp = ((LambdaExpression)exp).Body;
-                GetObjectSelection(select, exp, ++depth);
+                GetObjectSelection(select, exp, depth+1);
             }
-            select.AppendLine($"{String.Join("", Enumerable.Range(0, depth).Select(_ => "  "))}}}");
+            select.Append(String.Join("", Enumerable.Range(0, depth).Select(_ => "  ")));
+            select.Append("}");
             return select.ToString();
         }
 
