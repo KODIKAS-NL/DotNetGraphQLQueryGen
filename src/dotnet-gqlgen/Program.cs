@@ -45,7 +45,7 @@ namespace dotnet_gqlgen
                 // parse into AST
                 var typeInfo = SchemaCompiler.Compile(schemaText, mappings, this.GenerateAsString);
 
-                Console.WriteLine($"Generating types in namespace {Namespace}, outputting to {ClientClassName}.cs");
+                Console.WriteLine($"Generating types in namespace {Namespace}, outputting to {OutputDir}/GeneratedTypes.cs");
 
                 // pass the schema to the template
                 var engine = new RazorLightEngineBuilder()
@@ -66,16 +66,6 @@ namespace dotnet_gqlgen
                 });
                 Directory.CreateDirectory(OutputDir);
                 File.WriteAllText($"{OutputDir}/GeneratedTypes.cs", result);
-
-                result = await engine.CompileRenderAsync("client.cshtml", new
-                {
-                    Namespace = Namespace,
-                    SchemaFile = SchemaFile,
-                    Query = typeInfo.Query,
-                    Mutation = typeInfo.Mutation,
-                    ClientClassName = ClientClassName,
-                });
-                File.WriteAllText($"{OutputDir}/{ClientClassName}.cs", result);
 
                 Console.WriteLine($"Done.");
             }

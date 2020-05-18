@@ -2,14 +2,82 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace DotNetGqlClient
 {
+    public class GqlError
+    {
+        public string Message { get; set; }
+    }
+
+    public class GqlResult<TQuery>
+    {
+        public List<GqlError> Errors { get; set; }
+        public TQuery Data { get; set; }
+    }
+
     public abstract class BaseGraphQLClient
     {
+        private Uri apiUrl;
+        public HttpClient Client { get; private set; }
+
+        public BaseGraphQLClient()
+        {
+            this.apiUrl = new Uri("");
+            this.Client = new HttpClient();
+            this.Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        }
+
+        public BaseGraphQLClient(HttpClient client)
+            : this(client.BaseAddress, client)
+        {
+        }
+
+        public BaseGraphQLClient(Uri apiUrl, HttpClient client)
+        {
+            this.apiUrl = apiUrl;
+            this.Client = client;
+            this.Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        }
+
+        private async Task<GqlResult<TQuery>> ProcessResult<TQuery>(string gql)
+        {
+            // gql is a GraphQL doc e.g. { query MyQuery { stuff { id name } } }
+            // you can replace the following with what ever HTTP library you use
+            // don't forget to implement your authentication if required
+            var req = new HttpRequestMessage
+            {
+                RequestUri = this.apiUrl,
+                Method = HttpMethod.Post,
+            };
+            var queryReq = new
+            {
+                query = gql.ToString()
+            };
+            req.Content = new StringContent(JsonConvert.SerializeObject(queryReq), Encoding.UTF8, "application/json");
+            var res = await Client.SendAsync(req);
+            var strResult = await res.Content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<GqlResult<TQuery>>(strResult);
+            return data;
+        }
+
+        public async Task<GqlResult<TQuery>> QueryAsync<TSchema, TQuery>(Expression<Func<TSchema, TQuery>> query)
+        {
+            var gql = MakeQuery(query);
+            return await ProcessResult<TQuery>(gql);
+        }
+
+        public async Task<GqlResult<TQuery>> MutateAsync<TSchema, TQuery>(Expression<Func<TSchema, TQuery>> query)
+        {
+            var gql = MakeQuery(query, true);
+            return await ProcessResult<TQuery>(gql);
+        }
         protected virtual string MakeQuery<TSchema, TQuery>(Expression<Func<TSchema, TQuery>> query, bool mutation = false)
         {
             var gql = new StringBuilder();
